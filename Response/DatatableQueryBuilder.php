@@ -106,6 +106,13 @@ class DatatableQueryBuilder
     private $columns;
 
     /**
+     * Column names indexed by column key.
+     *
+     * @var array
+     */
+    private $columnNames = [];
+
+    /**
      * Contains all Columns to create a SELECT FROM statement.
      *
      * @var array
@@ -282,10 +289,14 @@ class DatatableQueryBuilder
     public function execute()
     {
         $qb = $this->getBuiltQb();
-
         $query = $qb->getQuery();
-        $query->setHydrationMode(Query::HYDRATE_ARRAY)->useQueryCache($this->useQueryCache);
-        \call_user_func_array([$query, 'useResultCache'], $this->useResultCacheArgs);
+        $query->setHydrationMode(Query::HYDRATE_ARRAY);
+
+        if (method_exists($query, 'useQueryCache')) {
+            $query->useQueryCache($this->useQueryCache);
+        }
+
+        $this->applyResultCache($query, $this->useResultCacheArgs);
 
         return $query;
     }
@@ -303,8 +314,13 @@ class DatatableQueryBuilder
         $this->setJoins($qb);
 
         $query = $qb->getQuery();
-        $query->useQueryCache($this->useCountQueryCache);
-        \call_user_func_array([$query, 'useResultCache'], $this->useCountResultCacheArgs);
+
+        if (method_exists($query, 'useQueryCache')) {
+            // Doctrine ORM 2.x
+            $query->useQueryCache($this->useCountQueryCache);
+        }
+
+        $this->applyResultCache($query, $this->useCountResultCacheArgs);
 
         return ! $qb->getDQLPart('groupBy')
             ? (int) $query->getSingleScalarResult()
@@ -725,6 +741,33 @@ class DatatableQueryBuilder
         ];
 
         return $this;
+    }
+
+    /**
+     * Apply result cache settings to a Doctrine Query instance.
+     *
+     * Compatible with Doctrine ORM 2.x and 3.x.
+     *
+     * @param Query $query
+     * @param array $args
+     */
+    private function applyResultCache(Query $query, array $args)
+    {
+        if (method_exists($query, 'useResultCache')) {
+            // Doctrine ORM 2.x
+            \call_user_func_array([$query, 'useResultCache'], $args);
+
+            return;
+        }
+
+        // Doctrine ORM 3.x
+        [$enabled, $lifetime, $cacheId] = array_pad($args, 3, null);
+
+        if ($enabled) {
+            $query->enableResultCache($lifetime, $cacheId);
+        } else {
+            $query->disableResultCache();
+        }
     }
 
     /**
