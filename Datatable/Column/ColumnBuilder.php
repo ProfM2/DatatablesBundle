@@ -321,7 +321,7 @@ class ColumnBuilder
         if (true === $column->callAddIfClosure()) {
             $this->columns[] = $column;
             $index = \count($this->columns) - 1;
-            $this->columnNames[$dql] = $index;
+            $this->columnNames[$dql ?? ''] = $index;
             $column->setIndex($index);
 
             // Use the Column-Index as data source for Columns with 'dql' === null
@@ -363,7 +363,7 @@ class ColumnBuilder
 
         // Reindex columnNames
         foreach ($this->columns as $k => $c) {
-            $this->columnNames[$c->getDql()] = $k;
+            $this->columnNames[$c->getDql() ?? ''] = $k;
         }
 
         // Remove column from uniqueColumns
