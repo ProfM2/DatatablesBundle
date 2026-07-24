@@ -44,7 +44,7 @@ class DatatableTwigExtension extends AbstractExtension
     /**
      * {@inheritdoc}
      */
-    public function getName()
+    public function getName(): string
     {
         return 'sg_datatables_twig_extension';
     }
@@ -52,7 +52,7 @@ class DatatableTwigExtension extends AbstractExtension
     /**
      * {@inheritdoc}
      */
-    public function getFunctions()
+    public function getFunctions(): array
     {
         return [
             new TwigFunction(
@@ -86,7 +86,7 @@ class DatatableTwigExtension extends AbstractExtension
     /**
      * {@inheritdoc}
      */
-    public function getFilters()
+    public function getFilters(): array
     {
         return [
             new TwigFilter('sg_datatables_bool_var', [$this, 'boolVar']),
